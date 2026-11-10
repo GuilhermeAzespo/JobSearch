@@ -12,6 +12,84 @@ document.addEventListener('DOMContentLoaded', () => {
   checkAuth();
 });
 
+// ==================== TOAST & CONFIRM DIALOG SYSTEM ====================
+function showToast(message, type = 'success', duration = 3500) {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+
+  const toast = document.createElement('div');
+  toast.className = `toast-enter pointer-events-auto flex items-center justify-between p-3.5 rounded-xl shadow-lg border text-xs font-medium transition-all ${
+    type === 'error'
+      ? 'bg-white border-rose-200 text-rose-900 shadow-rose-500/10'
+      : type === 'warning'
+      ? 'bg-white border-amber-200 text-amber-900 shadow-amber-500/10'
+      : type === 'info'
+      ? 'bg-white border-indigo-200 text-indigo-900 shadow-indigo-500/10'
+      : 'bg-white border-emerald-200 text-emerald-900 shadow-emerald-500/10'
+  }`;
+
+  const icon =
+    type === 'error'
+      ? '<i class="fa-solid fa-circle-xmark text-rose-500 text-base mr-2.5"></i>'
+      : type === 'warning'
+      ? '<i class="fa-solid fa-triangle-exclamation text-amber-500 text-base mr-2.5"></i>'
+      : type === 'info'
+      ? '<i class="fa-solid fa-circle-info text-brand-500 text-base mr-2.5"></i>'
+      : '<i class="fa-solid fa-circle-check text-emerald-500 text-base mr-2.5"></i>';
+
+  toast.innerHTML = `
+    <div class="flex items-center">
+      ${icon}
+      <span>${escapeHtml(message)}</span>
+    </div>
+    <button class="text-slate-400 hover:text-slate-600 ml-3 p-1 transition-colors" onclick="this.parentElement.remove()">
+      <i class="fa-solid fa-xmark text-xs"></i>
+    </button>
+  `;
+
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.remove('toast-enter');
+    toast.classList.add('toast-leave');
+    setTimeout(() => toast.remove(), 250);
+  }, duration);
+}
+
+function showConfirm({ title, message, confirmText = 'Sim, Confirmar', cancelText = 'Cancelar', isDanger = true, onConfirm }) {
+  const modal = document.getElementById('modal-confirm');
+  const titleEl = document.getElementById('confirm-title');
+  const msgEl = document.getElementById('confirm-message');
+  const actionBtn = document.getElementById('btn-confirm-action');
+  const cancelBtn = document.getElementById('btn-confirm-cancel');
+
+  if (titleEl) titleEl.textContent = title || 'Confirmar Ação';
+  if (msgEl) msgEl.textContent = message || 'Tem certeza que deseja prosseguir?';
+  
+  if (actionBtn) {
+    actionBtn.textContent = confirmText;
+    actionBtn.className = `px-4 py-2 text-white font-semibold text-xs rounded-xl shadow-xs transition-all ${
+      isDanger ? 'bg-rose-600 hover:bg-rose-700' : 'bg-brand-600 hover:bg-brand-700'
+    }`;
+    
+    // Clear old event listeners by cloning
+    const newActionBtn = actionBtn.cloneNode(true);
+    actionBtn.parentNode.replaceChild(newActionBtn, actionBtn);
+    newActionBtn.addEventListener('click', () => {
+      closeModal('modal-confirm');
+      if (typeof onConfirm === 'function') onConfirm();
+    });
+  }
+
+  if (cancelBtn) {
+    const newCancelBtn = cancelBtn.cloneNode(true);
+    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+    newCancelBtn.addEventListener('click', () => closeModal('modal-confirm'));
+  }
+
+  openModal('modal-confirm');
+}
+
 // Authenticated Fetch Helper
 async function apiFetch(url, options = {}) {
   const token = localStorage.getItem('jobsearch_token');
@@ -44,7 +122,6 @@ async function checkAuth() {
     currentUser = data.user;
     updateUserUI();
     hideAuthScreen();
-    // Load application data for this user
     loadProfile();
     loadPipeline();
     loadSettings();
@@ -88,6 +165,7 @@ async function handleLogin() {
     updateUserUI();
     hideAuthScreen();
 
+    showToast(`Bem-vindo de volta, ${currentUser.name}!`);
     loadProfile();
     loadPipeline();
     loadSettings();
@@ -104,6 +182,7 @@ function handleLogout() {
   localStorage.removeItem('jobsearch_token');
   currentUser = null;
   showAuthScreen();
+  showToast('Você saiu da sua conta.', 'info');
 }
 
 function updateUserUI() {
@@ -142,11 +221,11 @@ async function handleChangePassword() {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Erro ao alterar senha');
-    alert(data.message || 'Senha alterada com sucesso!');
+    showToast(data.message || 'Senha alterada com sucesso!');
     document.getElementById('pwd-current').value = '';
     document.getElementById('pwd-new').value = '';
   } catch (err) {
-    alert(err.message);
+    showToast(err.message, 'error');
   }
 }
 
@@ -183,7 +262,7 @@ async function loadAdminUsers() {
         </td>
         <td class="p-3 text-right">
           ${!isSelf && u.email !== 'guilherme@azespo.com.br' ? `
-            <button onclick="deleteAdminUser('${u.id}')" class="text-rose-500 hover:text-rose-700 font-semibold p-1" title="Excluir Usuário">
+            <button onclick="deleteAdminUser('${u.id}', '${escapeHtml(u.name)}')" class="text-rose-500 hover:text-rose-700 font-semibold p-1" title="Excluir Usuário">
               <i class="fa-solid fa-trash-can"></i>
             </button>
           ` : '<span class="text-slate-300 text-xs">-</span>'}
@@ -209,26 +288,34 @@ async function submitCreateUser() {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Erro ao cadastrar');
-    alert(`Usuário ${data.user.name} criado com sucesso!`);
+    showToast(`Usuário ${data.user.name} cadastrado com sucesso!`);
     document.getElementById('newuser-name').value = '';
     document.getElementById('newuser-email').value = '';
     document.getElementById('newuser-password').value = '';
     loadAdminUsers();
   } catch (err) {
-    alert(err.message);
+    showToast(err.message, 'error');
   }
 }
 
-async function deleteAdminUser(id) {
-  if (!confirm('Deseja realmente excluir este usuário?')) return;
-  try {
-    const res = await apiFetch(`/api/admin/users/${id}`, { method: 'DELETE' });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Erro ao excluir');
-    loadAdminUsers();
-  } catch (err) {
-    alert(err.message);
-  }
+function deleteAdminUser(id, userName) {
+  showConfirm({
+    title: 'Excluir Usuário',
+    message: `Tem certeza que deseja remover o usuário "${userName || 'selecionado'}"? Esta ação não pode ser desfeita.`,
+    confirmText: 'Sim, Excluir',
+    isDanger: true,
+    onConfirm: async () => {
+      try {
+        const res = await apiFetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erro ao excluir');
+        showToast('Usuário removido com sucesso!');
+        loadAdminUsers();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+  });
 }
 
 // Tab Switcher
@@ -328,10 +415,10 @@ async function saveProfileData() {
       body: JSON.stringify(currentProfile)
     });
     if (res.ok) {
-      alert('Perfil mestre atualizado com sucesso!');
+      showToast('Perfil mestre atualizado com sucesso!');
     }
   } catch (err) {
-    alert('Erro ao salvar perfil: ' + err.message);
+    showToast('Erro ao salvar perfil: ' + err.message, 'error');
   }
 }
 
@@ -401,7 +488,7 @@ function renderPipeline() {
           <option value="offer" ${job.status === 'offer' ? 'selected' : ''}>Oferta</option>
           <option value="rejected" ${job.status === 'rejected' ? 'selected' : ''}>Encerrada</option>
         </select>
-        <button onclick="deleteJob('${job.id}')" class="text-slate-400 hover:text-red-500 p-1 transition-colors" title="Remover">
+        <button onclick="deleteJob('${job.id}', '${escapeHtml(job.company)}')" class="text-slate-400 hover:text-red-500 p-1 transition-colors" title="Remover">
           <i class="fa-solid fa-trash-can"></i>
         </button>
       </div>
@@ -461,23 +548,32 @@ async function updateJobStatus(id, newStatus) {
       const item = currentPipeline.find(j => j.id === id);
       if (item) item.status = newStatus;
       renderPipeline();
+      showToast(`Status atualizado para: ${getStatusLabel(newStatus)}`, 'info');
     }
   } catch (err) {
     console.error(err);
   }
 }
 
-async function deleteJob(id) {
-  if (!confirm('Deseja realmente remover esta vaga do pipeline?')) return;
-  try {
-    const res = await apiFetch(`/api/pipeline/${id}`, { method: 'DELETE' });
-    if (res.ok) {
-      currentPipeline = currentPipeline.filter(j => j.id !== id);
-      renderPipeline();
+function deleteJob(id, companyName) {
+  showConfirm({
+    title: 'Excluir Vaga do Pipeline',
+    message: `Deseja realmente remover a candidatura para "${companyName || 'esta vaga'}" do seu pipeline?`,
+    confirmText: 'Sim, Remover',
+    isDanger: true,
+    onConfirm: async () => {
+      try {
+        const res = await apiFetch(`/api/pipeline/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          currentPipeline = currentPipeline.filter(j => j.id !== id);
+          renderPipeline();
+          showToast('Vaga removida com sucesso!');
+        }
+      } catch (err) {
+        showToast('Erro ao remover vaga: ' + err.message, 'error');
+      }
     }
-  } catch (err) {
-    console.error(err);
-  }
+  });
 }
 
 function openNewJobModal() {
@@ -506,16 +602,17 @@ async function submitNewJob() {
       closeModal('modal-new-job');
       renderPipeline();
       document.getElementById('new-job-form').reset();
+      showToast('Vaga adicionada ao pipeline com sucesso!');
     }
   } catch (err) {
-    alert('Erro ao salvar: ' + err.message);
+    showToast('Erro ao salvar: ' + err.message, 'error');
   }
 }
 
 // --- EVALUATOR & GENERATOR MODULE ---
 async function fetchJobUrl() {
   const url = document.getElementById('eval-url').value.trim();
-  if (!url) return alert('Por favor, informe uma URL válida.');
+  if (!url) return showToast('Por favor, informe uma URL válida.', 'warning');
 
   const btn = document.getElementById('btn-fetch-url');
   btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Lendo...';
@@ -529,11 +626,12 @@ async function fetchJobUrl() {
     const data = await res.json();
     if (data.success && data.text) {
       document.getElementById('eval-desc').value = data.text;
+      showToast('Conteúdo da vaga carregado com sucesso!');
     } else {
-      alert(data.error || 'Não foi possível extrair o texto automaticamente. Copie e cole a descrição.');
+      showToast(data.error || 'Não foi possível extrair o texto automaticamente. Copie e cole a descrição.', 'warning');
     }
   } catch (err) {
-    alert('Erro ao buscar link: ' + err.message);
+    showToast('Erro ao buscar link: ' + err.message, 'error');
   } finally {
     btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> Carregar Link';
     btn.disabled = false;
@@ -543,7 +641,7 @@ async function fetchJobUrl() {
 async function runEvaluation() {
   const desc = document.getElementById('eval-desc').value.trim();
   if (!desc || desc.length < 20) {
-    return alert('Por favor, cole a descrição da vaga com os requisitos para que possamos avaliá-la.');
+    return showToast('Por favor, cole a descrição da vaga com os requisitos para que possamos avaliá-la.', 'warning');
   }
 
   const btn = document.getElementById('btn-run-eval');
@@ -558,8 +656,9 @@ async function runEvaluation() {
     if (!res.ok) throw new Error('Falha na avaliação');
     lastEvaluation = await res.json();
     renderEvaluationResults(lastEvaluation);
+    showToast('Avaliação de compatibilidade concluída!');
   } catch (err) {
-    alert('Erro ao avaliar vaga: ' + err.message);
+    showToast('Erro ao avaliar vaga: ' + err.message, 'error');
   } finally {
     btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Avaliar Compatibilidade (Fit Score)';
     btn.disabled = false;
@@ -626,7 +725,6 @@ function renderEvaluationResults(ev) {
     dealBox.classList.add('hidden');
   }
 
-  // Scroll to results
   container.scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -641,8 +739,9 @@ async function generateCustomCV() {
     currentCV = await res.json();
     renderCVModal(currentCV);
     openModal('modal-cv');
+    showToast('Currículo direcionado gerado com sucesso!');
   } catch (err) {
-    alert('Erro ao gerar CV: ' + err.message);
+    showToast('Erro ao gerar CV: ' + err.message, 'error');
   }
 }
 
@@ -735,15 +834,16 @@ async function generateCustomCoverLetter() {
     currentCoverLetter = await res.json();
     document.getElementById('cover-letter-content-area').textContent = currentCoverLetter.content;
     openModal('modal-cover-letter');
+    showToast('Carta de apresentação gerada com sucesso!');
   } catch (err) {
-    alert('Erro ao gerar carta: ' + err.message);
+    showToast('Erro ao gerar carta: ' + err.message, 'error');
   }
 }
 
 function copyCoverLetterText() {
   if (currentCoverLetter?.content) {
     navigator.clipboard.writeText(currentCoverLetter.content);
-    alert('Texto da carta copiado para a área de transferência!');
+    showToast('Carta copiada para a área de transferência!', 'info');
   }
 }
 
@@ -758,8 +858,9 @@ async function generateCustomInterviewPrep() {
     const prep = await res.json();
     renderInterviewTab(prep);
     switchTab('interview');
+    showToast('Guia de entrevista gerado!');
   } catch (err) {
-    alert('Erro ao gerar entrevista: ' + err.message);
+    showToast('Erro ao gerar entrevista: ' + err.message, 'error');
   }
 }
 
@@ -869,11 +970,11 @@ async function addCurrentJobToPipeline() {
       const data = await res.json();
       currentPipeline.unshift(data.item);
       renderPipeline();
-      alert('Vaga adicionada ao Kanban com sucesso!');
+      showToast('Vaga adicionada ao Kanban com sucesso!');
       switchTab('kanban');
     }
   } catch (err) {
-    alert('Erro ao salvar no Kanban: ' + err.message);
+    showToast('Erro ao salvar no Kanban: ' + err.message, 'error');
   }
 }
 
@@ -940,11 +1041,11 @@ async function saveSettingsData() {
       body: JSON.stringify({ provider: prov, apiKey, model, ollamaUrl })
     });
     if (res.ok) {
-      alert('Configurações salvas com sucesso!');
+      showToast('Configurações salvas com sucesso!');
       loadSettings();
     }
   } catch (err) {
-    alert('Erro ao salvar configurações: ' + err.message);
+    showToast('Erro ao salvar configurações: ' + err.message, 'error');
   }
 }
 

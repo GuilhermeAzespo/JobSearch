@@ -106,29 +106,29 @@
 
         <!-- Navigation Tabs (Clean & Resilient) -->
         <nav class="hidden md:flex items-center space-x-1 overflow-x-auto no-scrollbar py-1" id="nav-tabs">
-          <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="nav-tab-btn active px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center space-x-1.5 text-brand-700 bg-brand-50 whitespace-nowrap">
+          <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="nav-tab-btn active px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center space-x-1.5 text-brand-700 bg-brand-50 whitespace-nowrap flex-shrink-0">
             <i class="fa-solid fa-chart-pie"></i>
-            <span>Dashboard</span>
+            <span class="whitespace-nowrap">Dashboard</span>
           </button>
-          <button onclick="switchTab('evaluator')" id="tab-btn-evaluator" class="nav-tab-btn px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center space-x-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 whitespace-nowrap">
+          <button onclick="switchTab('evaluator')" id="tab-btn-evaluator" class="nav-tab-btn px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center space-x-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 whitespace-nowrap flex-shrink-0">
             <i class="fa-solid fa-bullseye"></i>
-            <span>Avaliador de Vagas</span>
+            <span class="whitespace-nowrap">Avaliador</span>
           </button>
-          <button onclick="switchTab('kanban')" id="tab-btn-kanban" class="nav-tab-btn px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center space-x-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 whitespace-nowrap">
+          <button onclick="switchTab('kanban')" id="tab-btn-kanban" class="nav-tab-btn px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center space-x-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 whitespace-nowrap flex-shrink-0">
             <i class="fa-solid fa-table-columns"></i>
-            <span>Pipeline</span>
+            <span class="whitespace-nowrap">Pipeline</span>
           </button>
-          <button onclick="switchTab('interview')" id="tab-btn-interview" class="nav-tab-btn px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center space-x-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 whitespace-nowrap">
+          <button onclick="switchTab('interview')" id="tab-btn-interview" class="nav-tab-btn px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center space-x-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 whitespace-nowrap flex-shrink-0">
             <i class="fa-solid fa-microphone-lines"></i>
-            <span>Entrevistas</span>
+            <span class="whitespace-nowrap">Entrevistas</span>
           </button>
-          <button onclick="switchTab('profile')" id="tab-btn-profile" class="nav-tab-btn px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center space-x-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 whitespace-nowrap">
+          <button onclick="switchTab('profile')" id="tab-btn-profile" class="nav-tab-btn px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center space-x-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 whitespace-nowrap flex-shrink-0">
             <i class="fa-solid fa-user-tie"></i>
-            <span>Meu Perfil</span>
+            <span class="whitespace-nowrap">Perfil & CV</span>
           </button>
-          <button onclick="switchTab('settings')" id="tab-btn-settings" class="nav-tab-btn px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center space-x-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 whitespace-nowrap">
+          <button onclick="switchTab('settings')" id="tab-btn-settings" class="nav-tab-btn px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center space-x-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 whitespace-nowrap flex-shrink-0">
             <i class="fa-solid fa-gear"></i>
-            <span>Configurações</span>
+            <span class="whitespace-nowrap">Configurações</span>
           </button>
         </nav>
 
@@ -977,6 +977,26 @@
       </form>
     </div>
   </div>
+
+  <!-- ==================== MODAL: CONFIRMAÇÃO ELEGANTE ==================== -->
+  <div id="modal-confirm" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4">
+      <div class="w-12 h-12 mx-auto rounded-full bg-rose-50 text-rose-600 flex items-center justify-center text-xl">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <div>
+        <h3 id="confirm-title" class="text-base font-bold text-slate-900">Confirmar Ação</h3>
+        <p id="confirm-message" class="text-xs text-slate-500 mt-1">Tem certeza que deseja prosseguir com esta ação?</p>
+      </div>
+      <div class="flex items-center justify-center space-x-2 pt-2">
+        <button id="btn-confirm-cancel" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition-all">Cancelar</button>
+        <button id="btn-confirm-action" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs rounded-xl shadow-xs transition-all">Sim, Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TOAST NOTIFICATIONS CONTAINER ==================== -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none max-w-sm w-full px-4 sm:px-0"></div>
 
   <script src="/js/app.js"></script>
 </body>
