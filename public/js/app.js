@@ -1,4 +1,5 @@
 // Global State
+let currentUser = null;
 let currentProfile = null;
 let currentPipeline = [];
 let currentSettings = null;
@@ -8,10 +9,227 @@ let currentCoverLetter = null;
 
 // Initialize on DOM Ready
 document.addEventListener('DOMContentLoaded', () => {
-  loadProfile();
-  loadPipeline();
-  loadSettings();
+  checkAuth();
 });
+
+// Authenticated Fetch Helper
+async function apiFetch(url, options = {}) {
+  const token = localStorage.getItem('jobsearch_token');
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(options.headers || {})
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  const res = await fetch(url, { ...options, headers });
+  if (res.status === 401) {
+    handleLogout();
+    throw new Error('Sessão expirada. Faça login novamente.');
+  }
+  return res;
+}
+
+// --- AUTHENTICATION MODULE ---
+async function checkAuth() {
+  const token = localStorage.getItem('jobsearch_token');
+  if (!token) {
+    showAuthScreen();
+    return;
+  }
+  try {
+    const res = await apiFetch('/api/auth/me');
+    if (!res.ok) throw new Error('Token inválido');
+    const data = await res.json();
+    currentUser = data.user;
+    updateUserUI();
+    hideAuthScreen();
+    // Load application data for this user
+    loadProfile();
+    loadPipeline();
+    loadSettings();
+  } catch (err) {
+    showAuthScreen();
+  }
+}
+
+function showAuthScreen() {
+  const el = document.getElementById('auth-screen');
+  if (el) el.classList.remove('hidden');
+}
+
+function hideAuthScreen() {
+  const el = document.getElementById('auth-screen');
+  if (el) el.classList.add('hidden');
+}
+
+async function handleLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errBox = document.getElementById('login-error-box');
+  const errText = document.getElementById('login-error-text');
+  const btn = document.getElementById('btn-login');
+
+  errBox.classList.add('hidden');
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Entrando...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Falha ao autenticar');
+
+    localStorage.setItem('jobsearch_token', data.token);
+    currentUser = data.user;
+    updateUserUI();
+    hideAuthScreen();
+
+    loadProfile();
+    loadPipeline();
+    loadSettings();
+  } catch (err) {
+    errText.textContent = err.message;
+    errBox.classList.remove('hidden');
+  } finally {
+    btn.innerHTML = '<span>Entrar no Sistema</span> <i class="fa-solid fa-arrow-right text-xs"></i>';
+    btn.disabled = false;
+  }
+}
+
+function handleLogout() {
+  localStorage.removeItem('jobsearch_token');
+  currentUser = null;
+  showAuthScreen();
+}
+
+function updateUserUI() {
+  if (!currentUser) return;
+  const avatar = document.getElementById('user-avatar');
+  const headerName = document.getElementById('header-user-name');
+  const headerRole = document.getElementById('header-user-role');
+  const greetingName = document.getElementById('dash-greeting-name');
+  const adminBtn = document.getElementById('btn-admin-manage');
+  const adminSection = document.getElementById('admin-settings-section');
+
+  if (avatar) avatar.textContent = (currentUser.name || 'U').charAt(0).toUpperCase();
+  if (headerName) headerName.textContent = currentUser.name || currentUser.email;
+  if (headerRole) headerRole.textContent = currentUser.role === 'admin' ? 'Admin' : 'Usuário';
+  if (greetingName) greetingName.textContent = currentUser.name ? currentUser.name.split(' ')[0] : 'Candidato';
+
+  const isAdmin = currentUser.role === 'admin';
+  if (adminBtn) {
+    if (isAdmin) adminBtn.classList.remove('hidden');
+    else adminBtn.classList.add('hidden');
+  }
+  if (adminSection) {
+    if (isAdmin) adminSection.classList.remove('hidden');
+    else adminSection.classList.add('hidden');
+  }
+}
+
+async function handleChangePassword() {
+  const currentPassword = document.getElementById('pwd-current').value;
+  const newPassword = document.getElementById('pwd-new').value;
+
+  try {
+    const res = await apiFetch('/api/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erro ao alterar senha');
+    alert(data.message || 'Senha alterada com sucesso!');
+    document.getElementById('pwd-current').value = '';
+    document.getElementById('pwd-new').value = '';
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+// --- ADMIN USER MANAGEMENT ---
+function openAdminUsersModal() {
+  loadAdminUsers();
+  openModal('modal-admin-users');
+}
+
+async function loadAdminUsers() {
+  const tbody = document.getElementById('admin-users-table');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-center text-slate-400">Carregando usuários...</td></tr>';
+  try {
+    const res = await apiFetch('/api/admin/users');
+    const users = await res.json();
+    tbody.innerHTML = '';
+    users.forEach(u => {
+      const tr = document.createElement('tr');
+      tr.className = "hover:bg-slate-50 transition-colors";
+      const isSelf = currentUser && currentUser.id === u.id;
+      tr.innerHTML = `
+        <td class="p-3">
+          <div class="font-bold text-slate-900">${escapeHtml(u.name)} ${isSelf ? '<span class="text-[10px] bg-brand-50 text-brand-700 px-1.5 py-0.5 rounded font-bold">Você</span>' : ''}</div>
+          <div class="text-[11px] text-slate-500">${escapeHtml(u.email)}</div>
+        </td>
+        <td class="p-3">
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${u.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-slate-100 text-slate-700'}">
+            ${u.role === 'admin' ? 'Administrador' : 'Usuário'}
+          </span>
+        </td>
+        <td class="p-3 text-[11px] text-slate-500">
+          ${u.createdAt ? new Date(u.createdAt).toLocaleDateString('pt-BR') : '--'}
+        </td>
+        <td class="p-3 text-right">
+          ${!isSelf && u.email !== 'guilherme@azespo.com.br' ? `
+            <button onclick="deleteAdminUser('${u.id}')" class="text-rose-500 hover:text-rose-700 font-semibold p-1" title="Excluir Usuário">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          ` : '<span class="text-slate-300 text-xs">-</span>'}
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-rose-500">${escapeHtml(err.message)}</td></tr>`;
+  }
+}
+
+async function submitCreateUser() {
+  const name = document.getElementById('newuser-name').value.trim();
+  const email = document.getElementById('newuser-email').value.trim();
+  const password = document.getElementById('newuser-password').value;
+  const role = document.getElementById('newuser-role').value;
+
+  try {
+    const res = await apiFetch('/api/admin/users', {
+      method: 'POST',
+      body: JSON.stringify({ name, email, password, role })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erro ao cadastrar');
+    alert(`Usuário ${data.user.name} criado com sucesso!`);
+    document.getElementById('newuser-name').value = '';
+    document.getElementById('newuser-email').value = '';
+    document.getElementById('newuser-password').value = '';
+    loadAdminUsers();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+async function deleteAdminUser(id) {
+  if (!confirm('Deseja realmente excluir este usuário?')) return;
+  try {
+    const res = await apiFetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erro ao excluir');
+    loadAdminUsers();
+  } catch (err) {
+    alert(err.message);
+  }
+}
 
 // Tab Switcher
 function switchTab(tabId) {
@@ -30,7 +248,6 @@ function switchTab(tabId) {
     activeBtn.classList.remove('text-slate-600');
   }
 
-  // Refresh pipeline stats if switching to dashboard or kanban
   if (tabId === 'dashboard' || tabId === 'kanban') {
     renderPipeline();
   }
@@ -50,7 +267,7 @@ function closeModal(id) {
 // --- PROFILE MODULE ---
 async function loadProfile() {
   try {
-    const res = await fetch('/api/profile');
+    const res = await apiFetch('/api/profile');
     if (!res.ok) throw new Error('Falha ao carregar perfil');
     currentProfile = await res.json();
     populateProfileForm(currentProfile);
@@ -61,10 +278,10 @@ async function loadProfile() {
 
 function populateProfileForm(p) {
   if (!p) return;
-  document.getElementById('prof-name').value = p.identity?.name || '';
+  document.getElementById('prof-name').value = p.identity?.name || (currentUser ? currentUser.name : '');
   document.getElementById('prof-title').value = p.identity?.title || '';
   document.getElementById('prof-location').value = p.identity?.location || '';
-  document.getElementById('prof-email').value = p.identity?.email || '';
+  document.getElementById('prof-email').value = p.identity?.email || (currentUser ? currentUser.email : '');
   document.getElementById('prof-phone').value = p.identity?.phone || '';
   document.getElementById('prof-linkedin').value = p.identity?.linkedin || '';
   document.getElementById('prof-summary').value = p.identity?.summary || '';
@@ -106,9 +323,8 @@ async function saveProfileData() {
   };
 
   try {
-    const res = await fetch('/api/profile', {
+    const res = await apiFetch('/api/profile', {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(currentProfile)
     });
     if (res.ok) {
@@ -122,7 +338,7 @@ async function saveProfileData() {
 // --- PIPELINE (KANBAN) MODULE ---
 async function loadPipeline() {
   try {
-    const res = await fetch('/api/pipeline');
+    const res = await apiFetch('/api/pipeline');
     if (!res.ok) throw new Error('Falha ao carregar pipeline');
     currentPipeline = await res.json();
     renderPipeline();
@@ -158,14 +374,14 @@ function renderPipeline() {
     if (!colEl) return;
 
     const card = document.createElement('div');
-    card.className = "bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm hover:shadow transition-all space-y-2 text-xs relative group";
+    card.className = "bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs hover:shadow transition-all space-y-2 text-xs relative group";
     card.innerHTML = `
       <div class="flex items-start justify-between">
         <div>
           <h4 class="font-bold text-slate-900 text-sm leading-tight">${escapeHtml(job.company)}</h4>
           <p class="text-slate-600 font-medium">${escapeHtml(job.title)}</p>
         </div>
-        <span class="bg-indigo-50 text-indigo-700 font-bold px-2 py-0.5 rounded-full text-[10px] border border-indigo-100">
+        <span class="bg-indigo-50 text-indigo-700 font-bold px-2 py-0.5 rounded-full text-[10px] border border-indigo-100 whitespace-nowrap">
           ${job.fitScore || '--'}% Fit
         </span>
       </div>
@@ -194,17 +410,17 @@ function renderPipeline() {
   });
 
   // Update Column Counts
-  document.getElementById('col-count-wishlist').textContent = counts.wishlist;
-  document.getElementById('col-count-applied').textContent = counts.applied;
-  document.getElementById('col-count-interview').textContent = counts.interview;
-  document.getElementById('col-count-offer').textContent = counts.offer;
-  document.getElementById('col-count-rejected').textContent = counts.rejected;
+  const cw = document.getElementById('col-count-wishlist'); if (cw) cw.textContent = counts.wishlist;
+  const ca = document.getElementById('col-count-applied'); if (ca) ca.textContent = counts.applied;
+  const ci = document.getElementById('col-count-interview'); if (ci) ci.textContent = counts.interview;
+  const co = document.getElementById('col-count-offer'); if (co) co.textContent = counts.offer;
+  const cr = document.getElementById('col-count-rejected'); if (cr) cr.textContent = counts.rejected;
 
   // Update Dashboard stats
-  document.getElementById('stat-total').textContent = currentPipeline.length;
-  document.getElementById('stat-interviews').textContent = counts.interview;
-  document.getElementById('stat-offers').textContent = counts.offer;
-  document.getElementById('stat-avg-fit').textContent = fitCount > 0 ? `${Math.round(fitSum / fitCount)}%` : '85%';
+  const st = document.getElementById('stat-total'); if (st) st.textContent = currentPipeline.length;
+  const si = document.getElementById('stat-interviews'); if (si) si.textContent = counts.interview;
+  const so = document.getElementById('stat-offers'); if (so) so.textContent = counts.offer;
+  const sf = document.getElementById('stat-avg-fit'); if (sf) sf.textContent = fitCount > 0 ? `${Math.round(fitSum / fitCount)}%` : '88%';
 
   // Dashboard table
   const recentTable = document.getElementById('dashboard-recent-jobs');
@@ -237,9 +453,8 @@ function renderPipeline() {
 
 async function updateJobStatus(id, newStatus) {
   try {
-    const res = await fetch(`/api/pipeline/${id}`, {
+    const res = await apiFetch(`/api/pipeline/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: newStatus })
     });
     if (res.ok) {
@@ -255,7 +470,7 @@ async function updateJobStatus(id, newStatus) {
 async function deleteJob(id) {
   if (!confirm('Deseja realmente remover esta vaga do pipeline?')) return;
   try {
-    const res = await fetch(`/api/pipeline/${id}`, { method: 'DELETE' });
+    const res = await apiFetch(`/api/pipeline/${id}`, { method: 'DELETE' });
     if (res.ok) {
       currentPipeline = currentPipeline.filter(j => j.id !== id);
       renderPipeline();
@@ -281,9 +496,8 @@ async function submitNewJob() {
   };
 
   try {
-    const res = await fetch('/api/pipeline', {
+    const res = await apiFetch('/api/pipeline', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newJob)
     });
     if (res.ok) {
@@ -308,16 +522,15 @@ async function fetchJobUrl() {
   btn.disabled = true;
 
   try {
-    const res = await fetch('/api/fetch-url', {
+    const res = await apiFetch('/api/fetch-url', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url })
     });
     const data = await res.json();
     if (data.success && data.text) {
       document.getElementById('eval-desc').value = data.text;
     } else {
-      alert(data.error || 'Não foi possível extrair o texto automaticamente. Por favor, copie e cole o anúncio.');
+      alert(data.error || 'Não foi possível extrair o texto automaticamente. Copie e cole a descrição.');
     }
   } catch (err) {
     alert('Erro ao buscar link: ' + err.message);
@@ -338,9 +551,8 @@ async function runEvaluation() {
   btn.disabled = true;
 
   try {
-    const res = await fetch('/api/evaluate', {
+    const res = await apiFetch('/api/evaluate', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ jobDescription: desc })
     });
     if (!res.ok) throw new Error('Falha na avaliação');
@@ -422,9 +634,8 @@ function renderEvaluationResults(ev) {
 async function generateCustomCV() {
   const desc = document.getElementById('eval-desc').value.trim();
   try {
-    const res = await fetch('/api/generate/cv', {
+    const res = await apiFetch('/api/generate/cv', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ jobDescription: desc })
     });
     currentCV = await res.json();
@@ -517,9 +728,8 @@ async function generateCustomCoverLetter() {
   const role = document.getElementById('eval-title').value.trim() || 'Vaga Alvo';
 
   try {
-    const res = await fetch('/api/generate/cover-letter', {
+    const res = await apiFetch('/api/generate/cover-letter', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ jobDescription: desc, companyName: company, roleTitle: role })
     });
     currentCoverLetter = await res.json();
@@ -541,9 +751,8 @@ function copyCoverLetterText() {
 async function generateCustomInterviewPrep() {
   const desc = document.getElementById('eval-desc').value.trim();
   try {
-    const res = await fetch('/api/generate/interview', {
+    const res = await apiFetch('/api/generate/interview', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ jobDescription: desc })
     });
     const prep = await res.json();
@@ -557,10 +766,9 @@ async function generateCustomInterviewPrep() {
 function renderInterviewTab(prep) {
   const container = document.getElementById('interview-prep-content');
   container.innerHTML = `
-    <!-- Top Technical Questions -->
     <div>
       <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-3 text-brand-600 flex items-center">
-        <i class="fa-solid fa-code mr-2"></i> Perguntas Técnicas Prováveis com Respostas STAR
+        <i class="fa-solid fa-code mr-2"></i> Perguntas Técnicas com Respostas STAR
       </h3>
       <div class="space-y-4">
         ${(prep.technicalQuestions || []).map(q => `
@@ -591,14 +799,13 @@ function renderInterviewTab(prep) {
       </div>
     </div>
 
-    <!-- Behavioral Questions -->
     <div>
       <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-3 text-indigo-600 flex items-center">
         <i class="fa-solid fa-users mr-2"></i> Perguntas Comportamentais & Cultura
       </h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
         ${(prep.behavioralQuestions || []).map(b => `
-          <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-sm space-y-1">
+          <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-xs space-y-1">
             <h4 class="font-bold text-slate-900 text-xs">${escapeHtml(b.question)}</h4>
             <p class="text-slate-500 italic text-[11px]"><i class="fa-solid fa-lightbulb text-amber-500 mr-1"></i> ${escapeHtml(b.tip)}</p>
           </div>
@@ -606,7 +813,6 @@ function renderInterviewTab(prep) {
       </div>
     </div>
 
-    <!-- Honest Bridge for Missing Skills -->
     <div>
       <h3 class="text-sm font-bold text-amber-800 uppercase tracking-wider mb-2 flex items-center">
         <i class="fa-solid fa-bridge-water mr-2"></i> Pontes Honestas para Lacunas
@@ -621,10 +827,9 @@ function renderInterviewTab(prep) {
       </div>
     </div>
 
-    <!-- Questions to Ask the Interviewer -->
     <div>
       <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-3 text-emerald-700 flex items-center">
-        <i class="fa-solid fa-circle-question mr-2"></i> Perguntas Inteligentes para Você Fazer ao Entrevistador
+        <i class="fa-solid fa-circle-question mr-2"></i> Perguntas Inteligentes para Fazer ao Entrevistador
       </h3>
       <ul class="space-y-2 text-xs text-slate-700">
         ${(prep.questionsToAskInterviewer || []).map(qi => `
@@ -638,7 +843,6 @@ function renderInterviewTab(prep) {
   `;
 }
 
-// Add evaluated job directly to Pipeline
 async function addCurrentJobToPipeline() {
   const company = document.getElementById('eval-company').value.trim() || 'Nova Empresa';
   const title = document.getElementById('eval-title').value.trim() || 'Novo Cargo';
@@ -657,9 +861,8 @@ async function addCurrentJobToPipeline() {
   };
 
   try {
-    const res = await fetch('/api/pipeline', {
+    const res = await apiFetch('/api/pipeline', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newJob)
     });
     if (res.ok) {
@@ -684,13 +887,12 @@ function prepareJobEvaluation(company, title, descEncoded) {
 // --- SETTINGS MODULE ---
 async function loadSettings() {
   try {
-    const res = await fetch('/api/settings');
+    const res = await apiFetch('/api/settings');
     currentSettings = await res.json();
     document.getElementById('set-provider').value = currentSettings.provider || 'heuristic';
     document.getElementById('set-model').value = currentSettings.model || '';
     document.getElementById('set-ollama-url').value = currentSettings.ollamaUrl || 'http://localhost:11434';
     
-    // Status
     const badge = document.getElementById('ai-provider-name');
     if (badge) {
       badge.textContent = getProviderLabel(currentSettings.provider);
@@ -733,9 +935,8 @@ async function saveSettingsData() {
   const ollamaUrl = document.getElementById('set-ollama-url').value;
 
   try {
-    const res = await fetch('/api/settings', {
+    const res = await apiFetch('/api/settings', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ provider: prov, apiKey, model, ollamaUrl })
     });
     if (res.ok) {
@@ -788,4 +989,3 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 }
-

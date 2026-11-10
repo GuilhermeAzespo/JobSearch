@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Job Search | Plataforma Inteligente de Empregos & Carreira</title>
+  <title>JobSearch | Plataforma Inteligente de Empregos & Carreira</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -28,72 +28,154 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="/css/style.css">
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans">
 
-  <!-- Top Navbar -->
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center h-16">
-        
-        <!-- Logo & Branding -->
-        <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-brand-500/30">
-            <i class="fa-solid fa-briefcase text-lg"></i>
-          </div>
-          <div>
-            <div class="flex items-center space-x-2">
-              <span class="font-bold text-lg text-slate-900 tracking-tight">AI Job Search</span>
-              <span class="bg-brand-50 text-brand-700 text-xs px-2 py-0.5 rounded-full font-medium border border-brand-200">Easypanel Edition</span>
-            </div>
-            <p class="text-xs text-slate-500">Framework autônomo de carreira & candidaturas</p>
+  <!-- ==================== TELA DE LOGIN (MODAL / OVERLAY) ==================== -->
+  <div id="auth-screen" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl border border-slate-200">
+      
+      <!-- Brand Header -->
+      <div class="text-center mb-6">
+        <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-brand-500/30">
+          <i class="fa-solid fa-briefcase text-2xl"></i>
+        </div>
+        <h1 class="text-2xl font-black tracking-tight text-slate-900">JobSearch</h1>
+        <p class="text-xs text-slate-500 mt-1">Plataforma Inteligente de Gestão de Vagas & Carreira</p>
+      </div>
+
+      <!-- Error Alert -->
+      <div id="login-error-box" class="hidden mb-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 flex items-center space-x-2">
+        <i class="fa-solid fa-circle-exclamation text-rose-500 text-sm"></i>
+        <span id="login-error-text">Credenciais incorretas</span>
+      </div>
+
+      <!-- Login Form -->
+      <form id="login-form" onsubmit="event.preventDefault(); handleLogin();" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">E-mail de Acesso</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+              <i class="fa-solid fa-envelope text-xs"></i>
+            </span>
+            <input type="email" id="login-email" required placeholder="guilherme@azespo.com.br" class="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all">
           </div>
         </div>
 
-        <!-- Navigation Tabs -->
-        <nav class="hidden md:flex space-x-1" id="nav-tabs">
-          <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="nav-tab-btn active px-3.5 py-2 text-sm font-medium rounded-lg transition-colors flex items-center space-x-2 text-brand-700 bg-brand-50">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Senha</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+              <i class="fa-solid fa-lock text-xs"></i>
+            </span>
+            <input type="password" id="login-password" required placeholder="••••••••" class="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all">
+          </div>
+        </div>
+
+        <button type="submit" id="btn-login" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm py-2.5 rounded-xl shadow-lg shadow-brand-600/30 transition-all flex items-center justify-center space-x-2">
+          <span>Entrar no Sistema</span>
+          <i class="fa-solid fa-arrow-right text-xs"></i>
+        </button>
+      </form>
+
+      <!-- Security / Admin Notice -->
+      <div class="mt-6 pt-5 border-t border-slate-100 text-center">
+        <p class="text-[11px] text-slate-500 leading-relaxed">
+          <i class="fa-solid fa-shield-halved text-brand-600 mr-1"></i>
+          Acesso restrito. Todas as contas de usuários são gerenciadas e criadas exclusivamente pelo <b>Administrador</b>.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==================== TOP NAVBAR ==================== -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 gap-3">
+        
+        <!-- Brand (Compact & Single-Line) -->
+        <div class="flex items-center space-x-2.5 whitespace-nowrap flex-shrink-0">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white shadow-sm shadow-brand-500/30">
+            <i class="fa-solid fa-briefcase text-sm"></i>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="font-extrabold text-base sm:text-lg text-slate-900 tracking-tight">JobSearch</span>
+            <span class="hidden sm:inline-block bg-brand-50 text-brand-700 text-[10px] px-2 py-0.5 rounded-full font-bold border border-brand-200">Easypanel</span>
+          </div>
+        </div>
+
+        <!-- Navigation Tabs (Clean & Resilient) -->
+        <nav class="hidden md:flex items-center space-x-1 overflow-x-auto no-scrollbar py-1" id="nav-tabs">
+          <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="nav-tab-btn active px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center space-x-1.5 text-brand-700 bg-brand-50 whitespace-nowrap">
             <i class="fa-solid fa-chart-pie"></i>
             <span>Dashboard</span>
           </button>
-          <button onclick="switchTab('evaluator')" id="tab-btn-evaluator" class="nav-tab-btn px-3.5 py-2 text-sm font-medium rounded-lg transition-colors flex items-center space-x-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100">
+          <button onclick="switchTab('evaluator')" id="tab-btn-evaluator" class="nav-tab-btn px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center space-x-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 whitespace-nowrap">
             <i class="fa-solid fa-bullseye"></i>
             <span>Avaliador de Vagas</span>
           </button>
-          <button onclick="switchTab('kanban')" id="tab-btn-kanban" class="nav-tab-btn px-3.5 py-2 text-sm font-medium rounded-lg transition-colors flex items-center space-x-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100">
+          <button onclick="switchTab('kanban')" id="tab-btn-kanban" class="nav-tab-btn px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center space-x-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 whitespace-nowrap">
             <i class="fa-solid fa-table-columns"></i>
-            <span>Pipeline (Kanban)</span>
+            <span>Pipeline</span>
           </button>
-          <button onclick="switchTab('interview')" id="tab-btn-interview" class="nav-tab-btn px-3.5 py-2 text-sm font-medium rounded-lg transition-colors flex items-center space-x-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100">
+          <button onclick="switchTab('interview')" id="tab-btn-interview" class="nav-tab-btn px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center space-x-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 whitespace-nowrap">
             <i class="fa-solid fa-microphone-lines"></i>
             <span>Entrevistas</span>
           </button>
-          <button onclick="switchTab('profile')" id="tab-btn-profile" class="nav-tab-btn px-3.5 py-2 text-sm font-medium rounded-lg transition-colors flex items-center space-x-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100">
-            <i class="fa-solid fa-user-astronaut"></i>
+          <button onclick="switchTab('profile')" id="tab-btn-profile" class="nav-tab-btn px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center space-x-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 whitespace-nowrap">
+            <i class="fa-solid fa-user-tie"></i>
             <span>Meu Perfil</span>
           </button>
-          <button onclick="switchTab('settings')" id="tab-btn-settings" class="nav-tab-btn px-3.5 py-2 text-sm font-medium rounded-lg transition-colors flex items-center space-x-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100">
+          <button onclick="switchTab('settings')" id="tab-btn-settings" class="nav-tab-btn px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center space-x-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 whitespace-nowrap">
             <i class="fa-solid fa-gear"></i>
             <span>Configurações</span>
           </button>
         </nav>
 
-        <!-- Status & Badge -->
-        <div class="flex items-center space-x-3">
-          <div id="ai-provider-badge" class="flex items-center space-x-1.5 text-xs bg-slate-100 text-slate-700 px-3 py-1.5 rounded-full border border-slate-200">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <!-- Right User Actions & Logout -->
+        <div class="flex items-center space-x-2.5 whitespace-nowrap flex-shrink-0">
+          
+          <!-- AI Provider Badge -->
+          <div id="ai-provider-badge" class="hidden lg:flex items-center space-x-1.5 text-[11px] bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full border border-slate-200">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
             <span id="ai-provider-name" class="font-semibold">Modo Heurístico</span>
           </div>
-          <button onclick="switchTab('evaluator')" class="bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm transition-all flex items-center space-x-1.5">
+
+          <!-- Add Job Shortcut -->
+          <button onclick="switchTab('evaluator')" class="bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-xs transition-all flex items-center space-x-1">
             <i class="fa-solid fa-plus"></i>
             <span class="hidden sm:inline">Nova Vaga</span>
           </button>
+
+          <!-- User Menu Dropdown / Details -->
+          <div class="flex items-center space-x-2 pl-2 border-l border-slate-200">
+            <div class="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center text-xs font-bold" id="user-avatar">
+              G
+            </div>
+            <div class="hidden xl:block text-left text-xs leading-tight">
+              <span id="header-user-name" class="font-bold text-slate-900 block truncate max-w-[120px]">Guilherme</span>
+              <span id="header-user-role" class="text-[10px] text-brand-600 font-semibold uppercase">Admin</span>
+            </div>
+            
+            <!-- Admin Manage Users Button -->
+            <button id="btn-admin-manage" onclick="openAdminUsersModal()" title="Gerenciar Usuários" class="hidden p-1.5 text-slate-500 hover:text-brand-600 hover:bg-slate-100 rounded-lg transition-colors">
+              <i class="fa-solid fa-users-gear text-sm"></i>
+            </button>
+
+            <!-- Logout Button -->
+            <button onclick="handleLogout()" title="Sair da Conta" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors text-xs flex items-center space-x-1">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i>
+              <span class="hidden sm:inline">Sair</span>
+            </button>
+          </div>
+
         </div>
 
       </div>
     </div>
   </header>
 
-  <!-- Main Container -->
+  <!-- ==================== MAIN CONTAINER ==================== -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
 
     <!-- TAB 1: DASHBOARD -->
@@ -104,13 +186,13 @@
         <div class="relative z-10 max-w-3xl">
           <div class="inline-flex items-center space-x-2 bg-indigo-500/20 text-indigo-300 text-xs px-3 py-1 rounded-full mb-3 border border-indigo-400/30">
             <i class="fa-solid fa-sparkles"></i>
-            <span>Framework de Automação & Avaliação de Vagas</span>
+            <span>Centro de Inteligência de Candidaturas</span>
           </div>
           <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2">
-            Bem-vindo ao seu Centro de Comando de Carreira
+            Olá, <span id="dash-greeting-name">Guilherme</span>! Pronto para acelerar sua carreira?
           </h1>
           <p class="text-slate-300 text-sm sm:text-base mb-6 leading-relaxed">
-            Avalie compatibilidade em 5 dimensões, gere currículos direcionados para passar em filtros ATS, crie cartas de apresentação persuasivas e prepare-se com respostas no método STAR.
+            Avalie compatibilidade em 5 dimensões, gere currículos sob medida para passar em filtros ATS, crie cartas persuasivas e prepare-se para entrevistas no método STAR.
           </p>
           <div class="flex flex-wrap gap-3">
             <button onclick="switchTab('evaluator')" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-lg shadow-brand-600/30 transition-all flex items-center space-x-2">
@@ -119,19 +201,18 @@
             </button>
             <button onclick="switchTab('kanban')" class="bg-white/10 hover:bg-white/20 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-all border border-white/20 flex items-center space-x-2">
               <i class="fa-solid fa-table-columns"></i>
-              <span>Ver Pipeline de Candidaturas</span>
+              <span>Ver Pipeline de Vagas</span>
             </button>
           </div>
         </div>
-        <div class="absolute right-0 bottom-0 top-0 w-1/3 opacity-10 bg-[radial-gradient(#818cf8_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
       </div>
 
       <!-- Quick Stats Metrics -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
           <div>
-            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Candidaturas Ativas</p>
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Candidaturas Ativas</p>
             <h3 id="stat-total" class="text-2xl font-bold text-slate-900 mt-1">0</h3>
             <p class="text-xs text-slate-500 mt-1 flex items-center">
               <span class="text-emerald-600 font-medium mr-1"><i class="fa-solid fa-arrow-trend-up"></i> Em andamento</span>
@@ -142,9 +223,9 @@
           </div>
         </div>
 
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
           <div>
-            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Entrevistas Agendadas</p>
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Entrevistas Agendadas</p>
             <h3 id="stat-interviews" class="text-2xl font-bold text-indigo-600 mt-1">0</h3>
             <p class="text-xs text-slate-500 mt-1">Fase decisiva</p>
           </div>
@@ -153,9 +234,9 @@
           </div>
         </div>
 
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
           <div>
-            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Propostas / Ofertas</p>
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Propostas / Ofertas</p>
             <h3 id="stat-offers" class="text-2xl font-bold text-emerald-600 mt-1">0</h3>
             <p class="text-xs text-emerald-600 font-medium mt-1">Meta alcançada</p>
           </div>
@@ -164,11 +245,11 @@
           </div>
         </div>
 
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
           <div>
-            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Fit Score Médio</p>
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Fit Score Médio</p>
             <h3 id="stat-avg-fit" class="text-2xl font-bold text-slate-900 mt-1">88%</h3>
-            <p class="text-xs text-slate-500 mt-1">Alta relevância</p>
+            <p class="text-xs text-slate-500 mt-1">Alta aderência</p>
           </div>
           <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center text-xl">
             <i class="fa-solid fa-bullseye"></i>
@@ -181,13 +262,13 @@
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         <!-- Recent Applications Table -->
-        <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-xs p-6">
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-base font-bold text-slate-900 flex items-center space-x-2">
               <i class="fa-solid fa-list-check text-brand-600"></i>
               <span>Candidaturas Recentes</span>
             </h2>
-            <button onclick="switchTab('kanban')" class="text-xs text-brand-600 hover:text-brand-700 font-medium">Ver todas no Kanban &rarr;</button>
+            <button onclick="switchTab('kanban')" class="text-xs text-brand-600 hover:text-brand-700 font-semibold">Ver todas no Kanban &rarr;</button>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
@@ -207,30 +288,30 @@
         </div>
 
         <!-- Strategy Box -->
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-xs p-6 flex flex-col justify-between">
           <div>
             <h2 class="text-base font-bold text-slate-900 mb-3 flex items-center space-x-2">
               <i class="fa-solid fa-shield-halved text-emerald-600"></i>
-              <span>Princípios da Estratégia</span>
+              <span>Princípios da Plataforma</span>
             </h2>
             <div class="space-y-3 text-xs text-slate-600">
               <div class="p-3 bg-slate-50 rounded-lg border border-slate-100">
-                <p class="font-semibold text-slate-800 mb-1">1. Sem Alucinações / Honestidade</p>
-                <p>O framework nunca inventa competências que você não tem. Lacunas são admitidas com segurança e pontes estratégicas.</p>
+                <p class="font-bold text-slate-800 mb-1">1. Sem Alucinações</p>
+                <p>O sistema nunca inventa competências que você não possui. Lacunas são admitidas com segurança e pontes estratégicas.</p>
               </div>
               <div class="p-3 bg-slate-50 rounded-lg border border-slate-100">
-                <p class="font-semibold text-slate-800 mb-1">2. Otimizado para ATS</p>
-                <p>Extração e compatibilidade de palavras-chave para garantir que seu CV seja lido com sucesso pelos robôs de recrutamento.</p>
+                <p class="font-bold text-slate-800 mb-1">2. Otimizado para ATS</p>
+                <p>Extração semântica de palavras-chave para garantir que seu currículo seja lido com sucesso pelos robôs de recrutamento.</p>
               </div>
               <div class="p-3 bg-slate-50 rounded-lg border border-slate-100">
-                <p class="font-semibold text-slate-800 mb-1">3. Método STAR em Entrevistas</p>
+                <p class="font-bold text-slate-800 mb-1">3. Método STAR em Entrevistas</p>
                 <p>Respostas estruturadas em Situação, Tarefa, Ação e Resultado para destacar conquistas e métricas reais.</p>
               </div>
             </div>
           </div>
           <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-            <span>Deploy no Easypanel</span>
-            <span class="text-emerald-600 font-semibold flex items-center"><i class="fa-solid fa-circle-check mr-1"></i> Pronto para Nuvem</span>
+            <span>Servidor Autônomo</span>
+            <span class="text-emerald-600 font-semibold flex items-center"><i class="fa-solid fa-circle-check mr-1"></i> Multi-Usuário Ativo</span>
           </div>
         </div>
 
@@ -241,26 +322,26 @@
     <!-- TAB 2: AVALIADOR & GERADOR DE VAGAS -->
     <div id="tab-evaluator" class="tab-content hidden space-y-6">
       
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-xs p-6">
         <h2 class="text-lg font-bold text-slate-900 mb-1">Avaliação e Adaptação Inteligente de Vaga</h2>
         <p class="text-sm text-slate-500 mb-6">Cole o link da vaga ou o texto completo da descrição. O sistema avalia o Fit Score em 5 dimensões e gera os documentos sob medida.</p>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
-            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Nome da Empresa</label>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Nome da Empresa</label>
             <input type="text" id="eval-company" placeholder="Ex: Nubank, Mercado Livre, Google..." class="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Título do Cargo</label>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Título do Cargo</label>
             <input type="text" id="eval-title" placeholder="Ex: Senior Software Engineer, Tech Lead..." class="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
           </div>
         </div>
 
         <div class="mb-4">
-          <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Link da Vaga (Opcional - Busca Automática de Conteúdo)</label>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Link da Vaga (Opcional - Leitura Automática)</label>
           <div class="flex gap-2">
             <input type="url" id="eval-url" placeholder="https://linkedin.com/jobs/... ou site da empresa" class="flex-1 px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
-            <button onclick="fetchJobUrl()" id="btn-fetch-url" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-4 py-2 rounded-lg transition-colors flex items-center space-x-1.5">
+            <button onclick="fetchJobUrl()" id="btn-fetch-url" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-4 py-2 rounded-lg transition-colors flex items-center space-x-1.5 whitespace-nowrap">
               <i class="fa-solid fa-cloud-arrow-down"></i>
               <span>Carregar Link</span>
             </button>
@@ -268,18 +349,18 @@
         </div>
 
         <div class="mb-6">
-          <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Descrição Completa da Vaga & Requisitos *</label>
-          <textarea id="eval-desc" rows="7" placeholder="Cole aqui o texto do anúncio com os requisitos, responsabilidades, modelo de trabalho e benefícios..." class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none font-mono text-xs"></textarea>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Descrição Completa da Vaga & Requisitos *</label>
+          <textarea id="eval-desc" rows="7" placeholder="Cole aqui o texto do anúncio com os requisitos, responsabilidades e qualificações..." class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none font-mono text-xs"></textarea>
         </div>
 
         <div class="flex flex-wrap items-center justify-between gap-3">
-          <button onclick="runEvaluation()" id="btn-run-eval" class="bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm px-6 py-2.5 rounded-xl shadow-md shadow-brand-600/30 transition-all flex items-center space-x-2">
+          <button onclick="runEvaluation()" id="btn-run-eval" class="bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm px-6 py-2.5 rounded-xl shadow-md shadow-brand-600/30 transition-all flex items-center space-x-2">
             <i class="fa-solid fa-wand-magic-sparkles"></i>
             <span>Avaliar Compatibilidade (Fit Score)</span>
           </button>
           <div class="text-xs text-slate-500 flex items-center space-x-2">
             <i class="fa-solid fa-circle-info"></i>
-            <span>Compara automaticamente com o seu perfil mestre salvo</span>
+            <span>Compara automaticamente com o seu perfil mestre</span>
           </div>
         </div>
 
@@ -289,36 +370,36 @@
       <div id="eval-result-container" class="hidden space-y-6">
         
         <!-- Score & Dimensions Card -->
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-xs p-6">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-100">
             <div class="flex items-center space-x-5">
-              <div class="relative w-24 h-24 flex items-center justify-center rounded-2xl bg-slate-900 text-white shadow-inner">
+              <div class="relative w-24 h-24 flex items-center justify-center rounded-2xl bg-slate-900 text-white shadow-inner flex-shrink-0">
                 <div class="text-center">
                   <span id="eval-score-num" class="text-3xl font-extrabold text-emerald-400">92%</span>
-                  <span class="block text-[10px] text-slate-400 font-semibold tracking-wider uppercase">Fit Score</span>
+                  <span class="block text-[10px] text-slate-400 font-bold tracking-wider uppercase">Fit Score</span>
                 </div>
               </div>
               <div>
                 <span id="eval-score-badge" class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">Alta Compatibilidade</span>
                 <h3 id="eval-verdict" class="text-base font-bold text-slate-900 mt-2">Excelente oportunidade para candidatura direcionada.</h3>
-                <p class="text-xs text-slate-500 mt-0.5" id="eval-subtitle">Análise computada com base nas 5 dimensões do framework</p>
+                <p class="text-xs text-slate-500 mt-0.5">Análise computada nas 5 dimensões estratégicas</p>
               </div>
             </div>
 
             <div class="flex flex-wrap gap-2">
-              <button onclick="generateCustomCV()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-all flex items-center space-x-1.5 shadow-sm">
+              <button onclick="generateCustomCV()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-all flex items-center space-x-1.5 shadow-xs">
                 <i class="fa-solid fa-file-lines"></i>
-                <span>Gerar Currículo Sob Medida</span>
+                <span>Gerar Currículo</span>
               </button>
-              <button onclick="generateCustomCoverLetter()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-all flex items-center space-x-1.5 shadow-sm">
+              <button onclick="generateCustomCoverLetter()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-all flex items-center space-x-1.5 shadow-xs">
                 <i class="fa-solid fa-envelope-open-text"></i>
-                <span>Gerar Carta de Apresentação</span>
+                <span>Carta de Apresentação</span>
               </button>
-              <button onclick="generateCustomInterviewPrep()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-all flex items-center space-x-1.5 shadow-sm">
+              <button onclick="generateCustomInterviewPrep()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-all flex items-center space-x-1.5 shadow-xs">
                 <i class="fa-solid fa-microphone-lines"></i>
                 <span>Preparar Entrevista</span>
               </button>
-              <button onclick="addCurrentJobToPipeline()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-all flex items-center space-x-1.5 shadow-sm">
+              <button onclick="addCurrentJobToPipeline()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-all flex items-center space-x-1.5 shadow-xs">
                 <i class="fa-solid fa-plus"></i>
                 <span>Salvar no Kanban</span>
               </button>
@@ -379,14 +460,14 @@
         <!-- Skills Breakdown & Strategic Advice -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           
-          <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4">
+          <div class="bg-white rounded-xl border border-slate-200 shadow-xs p-6 space-y-4">
             <h4 class="text-sm font-bold text-slate-900 flex items-center space-x-2">
               <i class="fa-solid fa-tags text-brand-600"></i>
               <span>Mapeamento de Competências</span>
             </h4>
             
             <div>
-              <p class="text-xs font-semibold text-emerald-700 uppercase mb-2 flex items-center">
+              <p class="text-xs font-bold text-emerald-700 uppercase tracking-wider mb-2 flex items-center">
                 <i class="fa-solid fa-check-circle mr-1"></i> Competências Correspondentes (Matches)
               </p>
               <div id="eval-matched-badges" class="flex flex-wrap gap-1.5">
@@ -395,7 +476,7 @@
             </div>
 
             <div class="pt-2">
-              <p class="text-xs font-semibold text-amber-700 uppercase mb-2 flex items-center">
+              <p class="text-xs font-bold text-amber-700 uppercase tracking-wider mb-2 flex items-center">
                 <i class="fa-solid fa-triangle-exclamation mr-1"></i> Lacunas Identificadas (Gaps Honestos)
               </p>
               <div id="eval-missing-badges" class="flex flex-wrap gap-1.5">
@@ -410,7 +491,7 @@
             </div>
           </div>
 
-          <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+          <div class="bg-white rounded-xl border border-slate-200 shadow-xs p-6">
             <h4 class="text-sm font-bold text-slate-900 mb-3 flex items-center space-x-2">
               <i class="fa-solid fa-chess-knight text-purple-600"></i>
               <span>Recomendações Estratégicas</span>
@@ -432,9 +513,9 @@
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 class="text-lg font-bold text-slate-900">Pipeline de Candidaturas (Kanban)</h2>
-          <p class="text-sm text-slate-500">Acompanhe cada etapa do seu processo seletivo do primeiro contato até a assinatura do contrato.</p>
+          <p class="text-sm text-slate-500">Acompanhe cada etapa do seu processo seletivo do primeiro contato até a oferta de trabalho.</p>
         </div>
-        <button onclick="openNewJobModal()" class="bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-sm transition-all flex items-center space-x-1.5 self-start sm:self-auto">
+        <button onclick="openNewJobModal()" class="bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-xs transition-all flex items-center space-x-1.5 self-start sm:self-auto">
           <i class="fa-solid fa-plus"></i>
           <span>Adicionar Card</span>
         </button>
@@ -520,7 +601,7 @@
     <!-- TAB 4: ENTREVISTAS -->
     <div id="tab-interview" class="tab-content hidden space-y-6">
       
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-xs p-6">
         <h2 class="text-lg font-bold text-slate-900 mb-1">Simulador & Preparador de Entrevistas</h2>
         <p class="text-sm text-slate-500 mb-6">Gera perguntas técnicas reais, respostas no formato STAR estruturadas e perguntas estratégicas para impressionar os entrevistadores.</p>
 
@@ -540,13 +621,13 @@
     <!-- TAB 5: MEU PERFIL MESTRE -->
     <div id="tab-profile" class="tab-content hidden space-y-6">
       
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-        <div class="flex items-center justify-between pb-6 border-b border-slate-100">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-xs p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-slate-100 gap-4">
           <div>
             <h2 class="text-lg font-bold text-slate-900">Perfil Mestre do Candidato</h2>
             <p class="text-sm text-slate-500">Estes dados alimentam todas as avaliações de compatibilidade, geração de CV e cartas de apresentação.</p>
           </div>
-          <button onclick="saveProfileData()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-sm transition-all flex items-center space-x-1.5">
+          <button onclick="saveProfileData()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-xs transition-all flex items-center space-x-1.5 self-start sm:self-auto">
             <i class="fa-solid fa-floppy-disk"></i>
             <span>Salvar Alterações</span>
           </button>
@@ -556,14 +637,14 @@
           
           <!-- Identity -->
           <div>
-            <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-3 text-brand-600">Dados Pessoais & Contato</h3>
+            <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3 text-brand-600">Dados Pessoais & Contato</h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
               <div>
                 <label class="block font-semibold text-slate-700 mb-1">Nome Completo</label>
                 <input type="text" id="prof-name" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-1 focus:ring-brand-500">
               </div>
               <div>
-                <label class="block font-semibold text-slate-700 mb-1">Título Profissional / Cargo Atual</label>
+                <label class="block font-semibold text-slate-700 mb-1">Título Profissional / Cargo</label>
                 <input type="text" id="prof-title" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-1 focus:ring-brand-500">
               </div>
               <div>
@@ -587,13 +668,13 @@
 
           <!-- Summary -->
           <div>
-            <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-2 text-brand-600">Resumo Executivo / Bio</h3>
+            <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2 text-brand-600">Resumo Executivo / Bio</h3>
             <textarea id="prof-summary" rows="4" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none focus:ring-1 focus:ring-brand-500"></textarea>
           </div>
 
           <!-- Skills -->
           <div>
-            <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-3 text-brand-600">Competências Técnicas (Separadas por vírgula)</h3>
+            <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3 text-brand-600">Competências Técnicas (Separadas por vírgula)</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
               <div>
                 <label class="block font-semibold text-slate-700 mb-1">Habilidades Primárias (Linguagens & Frameworks)</label>
@@ -616,7 +697,7 @@
 
           <!-- Dealbreakers -->
           <div>
-            <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-3 text-brand-600">Critérios Inegociáveis (Deal-breakers)</h3>
+            <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3 text-brand-600">Critérios Inegociáveis (Deal-breakers)</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
               <div>
                 <label class="block font-semibold text-slate-700 mb-1">Modelos de Trabalho Aceitos</label>
@@ -634,13 +715,13 @@
 
     </div>
 
-    <!-- TAB 6: CONFIGURAÇÕES & EASYPANEL -->
+    <!-- TAB 6: CONFIGURAÇÕES -->
     <div id="tab-settings" class="tab-content hidden space-y-6">
       
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         <!-- AI Provider Settings -->
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-xs p-6">
           <h2 class="text-base font-bold text-slate-900 mb-1">Provedor de Inteligência Artificial</h2>
           <p class="text-xs text-slate-500 mb-4">Escolha o motor de processamento. O sistema funciona 100% mesmo sem chave de API através do <b>Modo Heurístico Integrado</b>.</p>
 
@@ -649,10 +730,10 @@
               <label class="block font-semibold text-slate-700 mb-1">Provedor Selecionado</label>
               <select id="set-provider" onchange="toggleProviderFields()" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-1 focus:ring-brand-500">
                 <option value="heuristic">Modo Heurístico Integrado (Offline / Sem Custos de API)</option>
-                <option value="anthropic">Anthropic Claude (Recomendado do Projeto Original)</option>
+                <option value="anthropic">Anthropic Claude (Recomendado)</option>
                 <option value="openai">OpenAI (GPT-4o / GPT-4o-mini)</option>
                 <option value="gemini">Google Gemini (Gemini 1.5 Pro / Flash)</option>
-                <option value="groq">Groq (Ultra-rápido Llama 3.3)</option>
+                <option value="groq">Groq (Llama 3.3 Ultra-rápido)</option>
                 <option value="ollama">Ollama (Modelo Local Autônomo)</option>
               </select>
             </div>
@@ -674,37 +755,49 @@
             </div>
 
             <div class="pt-2">
-              <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-semibold px-4 py-2 rounded-lg transition-all shadow-sm">
+              <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-semibold px-4 py-2 rounded-lg transition-all shadow-xs">
                 Salvar Configurações de IA
               </button>
             </div>
           </form>
         </div>
 
-        <!-- Easypanel Deployment Info -->
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-          <div class="flex items-center space-x-2 mb-3">
-            <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
-            <h2 class="text-base font-bold text-slate-900">Deploy no Easypanel (Pronto para Nuvem)</h2>
+        <!-- Security & User Management Box -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-xs p-6 space-y-6">
+          
+          <!-- Password Change -->
+          <div>
+            <h2 class="text-base font-bold text-slate-900 mb-1">Segurança da Sua Conta</h2>
+            <p class="text-xs text-slate-500 mb-3">Altere sua senha de acesso a qualquer momento.</p>
+            
+            <form onsubmit="event.preventDefault(); handleChangePassword();" class="space-y-3 text-xs">
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Senha Atual</label>
+                <input type="password" id="pwd-current" required class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-1 focus:ring-brand-500">
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Nova Senha</label>
+                <input type="password" id="pwd-new" required minlength="5" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-1 focus:ring-brand-500">
+              </div>
+              <button type="submit" class="bg-slate-800 hover:bg-slate-900 text-white font-semibold px-4 py-2 rounded-lg transition-all">
+                Atualizar Minha Senha
+              </button>
+            </form>
           </div>
-          <p class="text-xs text-slate-600 leading-relaxed mb-4">
-            Este projeto conta com <b>Dockerfile multi-stage ultra-leve</b> e <b>docker-compose.yml</b> prontos. No Easypanel, basta criar um novo aplicativo, apontar para o seu repositório no GitHub e fazer o deploy em segundos!
-          </p>
 
-          <div class="space-y-3 text-xs">
-            <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
-              <p class="font-bold text-slate-800 mb-0.5">Passo 1: Repositório no GitHub</p>
-              <p class="text-slate-600">Repositório: <code class="text-brand-600 font-mono">https://github.com/GuilhermeAzespo/JobSearch</code> (Branch: <code class="text-brand-600 font-mono">main</code>)</p>
-            </div>
-            <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
-              <p class="font-bold text-slate-800 mb-0.5">Passo 2: No painel do Easypanel</p>
-              <p class="text-slate-600">Clique em <b>+ New App</b> &rarr; <b>App</b> &rarr; Selecione <b>Git Repository</b> e insira a URL.</p>
-            </div>
-            <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
-              <p class="font-bold text-slate-800 mb-0.5">Passo 3: Porta e Armazenamento Persistente</p>
-              <p class="text-slate-600">Porta: <code class="font-mono text-emerald-700">3000</code>. Volume (opcional): crie um mount de <code class="font-mono text-slate-800">/app/data</code> para manter seus dados preservados.</p>
-            </div>
+          <!-- Admin Users Panel Trigger -->
+          <div id="admin-settings-section" class="hidden pt-4 border-t border-slate-100">
+            <h3 class="text-sm font-bold text-slate-900 mb-1 flex items-center space-x-1.5">
+              <i class="fa-solid fa-users text-brand-600"></i>
+              <span>Gerenciamento de Usuários (Apenas Administrador)</span>
+            </h3>
+            <p class="text-xs text-slate-500 mb-3">Como não há página de registro público, você cria as contas dos novos usuários aqui.</p>
+            <button onclick="openAdminUsersModal()" class="bg-indigo-50 hover:bg-indigo-100 text-brand-700 border border-brand-200 text-xs font-semibold px-4 py-2 rounded-lg transition-all flex items-center space-x-2">
+              <i class="fa-solid fa-user-plus"></i>
+              <span>Gerenciar & Adicionar Usuários</span>
+            </button>
           </div>
+
         </div>
 
       </div>
@@ -713,7 +806,78 @@
 
   </main>
 
-  <!-- MODAL: PREVIEW DE CURRÍCULO (CV) -->
+  <!-- ==================== MODAL: GERENCIAMENTO DE USUÁRIOS (ADMIN) ==================== -->
+  <div id="modal-admin-users" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div>
+          <h3 class="font-bold text-base text-slate-900">Gerenciamento de Usuários</h3>
+          <p class="text-xs text-slate-500">Crie e controle os acessos de usuários da plataforma</p>
+        </div>
+        <button onclick="closeModal('modal-admin-users')" class="text-slate-400 hover:text-slate-600 text-lg p-1.5">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-6 overflow-y-auto flex-1 space-y-6">
+        
+        <!-- Add New User Form -->
+        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+          <h4 class="font-bold text-xs uppercase tracking-wider text-slate-700 mb-3">Criar Novo Usuário</h4>
+          <form onsubmit="event.preventDefault(); submitCreateUser();" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">Nome Completo *</label>
+              <input type="text" id="newuser-name" required placeholder="Ex: Carlos Silva" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none">
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">E-mail de Login *</label>
+              <input type="email" id="newuser-email" required placeholder="carlos@empresa.com" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none">
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">Senha Temporária *</label>
+              <input type="password" id="newuser-password" required minlength="5" placeholder="••••••••" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none">
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">Perfil de Acesso</label>
+              <select id="newuser-role" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none">
+                <option value="user">Usuário Padrão</option>
+                <option value="admin">Administrador</option>
+              </select>
+            </div>
+            <div class="sm:col-span-2 pt-1 flex justify-end">
+              <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-semibold px-4 py-2 rounded-lg transition-all shadow-xs flex items-center space-x-1.5">
+                <i class="fa-solid fa-user-plus"></i>
+                <span>Cadastrar Usuário</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Users Table -->
+        <div>
+          <h4 class="font-bold text-xs uppercase tracking-wider text-slate-700 mb-2">Usuários Cadastrados</h4>
+          <div class="overflow-x-auto border border-slate-200 rounded-xl">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 text-slate-500 font-semibold uppercase border-b border-slate-200">
+                <tr>
+                  <th class="p-3">Nome & E-mail</th>
+                  <th class="p-3">Perfil</th>
+                  <th class="p-3">Data</th>
+                  <th class="p-3 text-right">Ação</th>
+                </tr>
+              </thead>
+              <tbody id="admin-users-table" class="divide-y divide-slate-100">
+                <!-- Rendered via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: PREVIEW DE CURRÍCULO ==================== -->
   <div id="modal-cv" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
       <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
@@ -737,7 +901,7 @@
     </div>
   </div>
 
-  <!-- MODAL: CARTA DE APRESENTAÇÃO -->
+  <!-- ==================== MODAL: CARTA DE APRESENTAÇÃO ==================== -->
   <div id="modal-cover-letter" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
       <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
@@ -765,7 +929,7 @@
     </div>
   </div>
 
-  <!-- MODAL: NOVO CARD NO KANBAN -->
+  <!-- ==================== MODAL: NOVO CARD NO KANBAN ==================== -->
   <div id="modal-new-job" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl">
       <div class="flex justify-between items-center mb-4">
@@ -817,4 +981,3 @@
   <script src="/js/app.js"></script>
 </body>
 </html>
-

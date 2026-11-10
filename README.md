@@ -76,6 +76,12 @@ Insira o link da vaga (com captura automática de texto) ou cole a descrição d
   - **Groq** (Llama 3.3 70B com resposta em milissegundos)
   - **Ollama** (Modelos locais no seu próprio servidor)
 
+### 8. 🔐 Autenticação & Gestão de Usuários (Acesso Restrito)
+- **Segurança Nativa:** Proteção de rotas com tokens assinados digitalmente e hashing Scrypt com salt individual para senhas.
+- **Sem Registro Aberto:** Novas contas são criadas e controladas exclusivamente pelo Administrador no painel de configurações.
+- **Conta Inicial de Administrador:** E-mail `guilherme@azespo.com.br` (senha inicial: `admin123`, alterável nas configurações).
+- **Isolamento de Dados:** Cada usuário tem seu próprio perfil mestre e seu próprio pipeline Kanban de vagas isolados.
+
 ---
 
 ## 🐳 Deploy no Easypanel (Nuvem em Minutos)
