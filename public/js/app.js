@@ -611,12 +611,16 @@ async function submitNewJob() {
 
 // --- EVALUATOR & GENERATOR MODULE ---
 async function fetchJobUrl() {
-  const url = document.getElementById('eval-url').value.trim();
-  if (!url) return showToast('Por favor, informe uma URL válida.', 'warning');
+  const urlInput = document.getElementById('eval-url');
+  const url = urlInput ? urlInput.value.trim() : '';
+  if (!url) return showToast('Por favor, informe uma URL ou ID de vaga do LinkedIn.', 'warning');
 
   const btn = document.getElementById('btn-fetch-url');
-  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Lendo...';
-  btn.disabled = true;
+  const originalHtml = btn ? btn.innerHTML : '<i class="fa-solid fa-cloud-arrow-down"></i> Carregar Link';
+  if (btn) {
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Carregando...';
+    btn.disabled = true;
+  }
 
   try {
     const res = await apiFetch('/api/fetch-url', {
@@ -624,17 +628,31 @@ async function fetchJobUrl() {
       body: JSON.stringify({ url })
     });
     const data = await res.json();
-    if (data.success && data.text) {
-      document.getElementById('eval-desc').value = data.text;
-      showToast('Conteúdo da vaga carregado com sucesso!');
+    if (res.ok && data.success && data.text) {
+      const descEl = document.getElementById('eval-desc');
+      if (descEl) descEl.value = data.text;
+
+      if (data.isLinkedIn) {
+        const compEl = document.getElementById('eval-company');
+        const titleEl = document.getElementById('eval-title');
+        if (compEl && data.company) compEl.value = data.company;
+        if (titleEl && data.title) titleEl.value = data.title;
+        if (urlInput && data.cleanUrl) urlInput.value = data.cleanUrl;
+
+        showToast(`Vaga do LinkedIn importada: ${data.company ? data.company + ' - ' : ''}${data.title || ''}`, 'success');
+      } else {
+        showToast('Conteúdo da vaga carregado com sucesso!', 'success');
+      }
     } else {
       showToast(data.error || 'Não foi possível extrair o texto automaticamente. Copie e cole a descrição.', 'warning');
     }
   } catch (err) {
     showToast('Erro ao buscar link: ' + err.message, 'error');
   } finally {
-    btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> Carregar Link';
-    btn.disabled = false;
+    if (btn) {
+      btn.innerHTML = originalHtml;
+      btn.disabled = false;
+    }
   }
 }
 

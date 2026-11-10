@@ -4,6 +4,7 @@ const path = require('path');
 const storage = require('./lib/storage');
 const ai = require('./lib/ai-service');
 const auth = require('./lib/auth');
+const linkedin = require('./lib/linkedin');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -219,14 +220,40 @@ app.post('/api/settings', requireAuth, requireAdmin, (req, res) => {
   }
 });
 
-// URL text extractor helper
+// URL text extractor helper with dedicated LinkedIn integration
 app.post('/api/fetch-url', requireAuth, async (req, res) => {
   const { url } = req.body;
   if (!url) return res.status(400).json({ error: 'URL não informada' });
+  
+  // Dedicated LinkedIn extraction
+  const linkedinJobId = linkedin.extractLinkedInJobId(url);
+  if (linkedinJobId || url.includes('linkedin.com')) {
+    if (!linkedinJobId) {
+      return res.status(400).json({ error: 'Não foi possível identificar o ID da vaga no link do LinkedIn informado. Verifique se o link possui o parâmetro currentJobId ou /view/.' });
+    }
+    try {
+      const job = await linkedin.fetchLinkedInJob(linkedinJobId);
+      return res.json({
+        success: true,
+        isLinkedIn: true,
+        company: job.company,
+        title: job.title,
+        location: job.location,
+        seniority: job.seniority,
+        employmentType: job.employmentType,
+        text: job.description,
+        cleanUrl: job.url
+      });
+    } catch (err) {
+      return res.status(500).json({ error: 'Erro ao carregar vaga do LinkedIn: ' + err.message });
+    }
+  }
+
+  // Generic website text extractor fallback
   try {
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
       }
     });
     if (!response.ok) {

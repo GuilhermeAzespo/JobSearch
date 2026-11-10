@@ -338,14 +338,29 @@
         </div>
 
         <div class="mb-4">
-          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Link da Vaga (Opcional - Leitura Automática)</label>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+              Link da Vaga (LinkedIn ou site da empresa)
+            </label>
+            <span class="text-[11px] text-blue-600 font-semibold flex items-center">
+              <i class="fa-brands fa-linkedin text-sm mr-1"></i> Suporte nativo ao LinkedIn
+            </span>
+          </div>
           <div class="flex gap-2">
-            <input type="url" id="eval-url" placeholder="https://linkedin.com/jobs/... ou site da empresa" class="flex-1 px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
-            <button onclick="fetchJobUrl()" id="btn-fetch-url" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-4 py-2 rounded-lg transition-colors flex items-center space-x-1.5 whitespace-nowrap">
+            <div class="relative flex-1">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <i class="fa-solid fa-link text-xs"></i>
+              </div>
+              <input type="url" id="eval-url" onkeydown="if(event.key==='Enter'){event.preventDefault();fetchJobUrl();}" placeholder="Cole o link da vaga (LinkedIn, site da empresa, etc.)" class="w-full pl-9 pr-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
+            </div>
+            <button onclick="fetchJobUrl()" id="btn-fetch-url" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors flex items-center space-x-1.5 whitespace-nowrap shadow-xs">
               <i class="fa-solid fa-cloud-arrow-down"></i>
               <span>Carregar Link</span>
             </button>
           </div>
+          <p class="text-[11px] text-slate-500 mt-1">
+            Ao colar um link do LinkedIn (vaga direta ou busca), o sistema extrai e preenche Empresa, Cargo e Descrição automaticamente.
+          </p>
         </div>
 
         <div class="mb-6">
