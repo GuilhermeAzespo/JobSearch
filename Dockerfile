@@ -20,3 +20,4 @@ EXPOSE 3000
 
 # Run server
 CMD ["node", "server.js"]
+

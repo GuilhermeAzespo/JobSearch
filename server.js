@@ -229,3 +229,4 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 AI Job Search Web está rodando na porta ${PORT}`);
   console.log(`🌐 Acesse localmente: http://localhost:${PORT}`);
 });
+

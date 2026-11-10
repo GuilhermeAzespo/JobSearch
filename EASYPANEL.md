@@ -68,3 +68,4 @@ Se desejar que novas melhorias enviadas ao GitHub sejam publicadas automaticamen
 2. No seu repositório GitHub (`GuilhermeAzespo/JobSearch`), vá em **Settings &rarr; Webhooks &rarr; Add Webhook**.
 3. Cole a URL do webhook e selecione o evento **Push**.
 4. Sempre que você fizer `git push`, o Easypanel atualizará o sistema automaticamente!
+
